@@ -1,93 +1,136 @@
-# Coda Documentation Scraper
+# Documentation Scraper
 
-A specialized scraper for extracting and cleaning documentation from Coda.io pages.
+A robust, asynchronous Python tool for scraping and cleaning documentation from any website. It recursively traverses documentation sites, extracts and cleans text using an LLM, and outputs the results in Markdown format. Includes rate limiting, logging, and error handling for reliability.
+
+---
 
 ## Features
 
-- Asynchronous crawling using the Spider Cloud SDK
-- Content extraction and transformation to Markdown
-- LLM-powered cleaning of scraped content to remove noise
-- Recursive traversal of linked pages within the same domain
-- Rate limiting to avoid overloading servers
+- Asynchronous crawling with concurrency and rate limiting
+- LLM-powered cleaning of extracted content (OpenAI API)
+- Recursive traversal of all subpages within the same domain
+- Custom logging per target domain
+- Robust retry and error handling (network, LLM, HTTP errors)
+- Output in clean, Markdown-formatted text
+- Easily configurable for different documentation sites
+
+---
 
 ## Requirements
 
 - Python 3.10+
-- `spider-client`: Spider Cloud's official Python SDK
-- `openai`: OpenAI API client for content cleaning
-- `aiofiles`: For asynchronous file I/O
-- `python-dotenv`: For environment variable management
+- [UV](https://github.com/astral-sh/uv) (recommended for fast dependency management)
+- `pyproject.toml` (all dependencies are managed here)
+- `httpx` (async HTTP client)
+- `beautifulsoup4` (HTML parsing)
+- `openai` (OpenAI API client)
+- `aiofiles` (async file I/O)
+- `python-dotenv` (environment variable management)
+- `lxml` (parser for BeautifulSoup)
+
+Install all dependencies with:
+
+```bash
+make install
+```
+
+Or, directly:
+
+```bash
+uv sync
+```
+
+---
 
 ## Setup
 
-1. Clone the repository
+1. **Clone the repository:**
    ```bash
    git clone <repository-url>
    cd doc-scrape
    ```
 
-2. Install the dependencies
+2. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
-   ```
-   
-   Or if you're using Poetry:
-   ```bash
-   poetry install
+   make install
+   # or
+   uv sync
    ```
 
-3. Set up your environment variables in a `.env` file:
+3. **Set up your environment variables in a `.env` file:**
    ```
-   SPIDER_API_KEY=your_spider_cloud_api_key
    OPENAI_API_KEY=your_openai_api_key
    ```
 
+---
+
 ## Usage
 
-### Option 1: Run the helper script
+You can use the Makefile for common tasks:
 
-The simplest way to run the scraper on the PlanYear Client Knowledge Base:
+- **Run the scraper:**
+  ```bash
+  make run BASE_URL=https://example.com/docs OUTPUT=example_docs.txt
+  ```
+  - `BASE_URL` (required): The base URL of the documentation website to scrape
+  - `OUTPUT` (optional): Output file name (default: `docs_output.txt`)
 
-```bash
-python run_scraper.py
-```
+- **Add a new dependency:**
+  ```bash
+  make add NAME=package_name
+  ```
+  This will add the package to `pyproject.toml` using `uv add`.
 
-### Option 2: Run the scraper directly
+- **Manual install (if needed):**
+  ```bash
+  uv sync
+  ```
 
-You can also run the enhanced scraper directly with custom arguments:
+- **Install the project as a package (for editable mode):**
+  ```bash
+  uv pip install .
+  ```
 
-```bash
-python enhanced_scraper.py https://coda.io/d/PlanYear-Client-Knowledge-Base_dSbXPwSgGqG --output my_output.md
-```
+- **Clean up build artifacts:**
+  ```bash
+  make clean
+  ```
 
-Or if you want to provide your API key as an argument:
-
-```bash
-python enhanced_scraper.py https://coda.io/d/PlanYear-Client-Knowledge-Base_dSbXPwSgGqG --output my_output.md --spider_api_key YOUR_API_KEY
-```
-
-## Configuration
-
-You can adjust the scraper's behavior by modifying these variables in `enhanced_scraper.py`:
-
-- `CRAWLER_PARAMS`: Settings for the Spider API calls
-- `SYSTEM_PROMPT`: Instructions for the LLM to clean content
-- Semaphore limit in `crawl_coda_documentation`: Controls concurrency
+---
 
 ## Output
 
-The scraper generates a Markdown file containing:
+- Each page's cleaned content is written to the output file in Markdown format.
+- The URL of each page is included as a header.
+- Separator lines (`====================`) are used between pages.
+- A log file is generated per domain (e.g., `docs_example_com_scraping.log`).
 
-1. A header with the URL being scraped
-2. The cleaned content for each page
-3. Separator lines between different pages
+---
+
+## Advanced Configuration
+
+- **Concurrency and rate limits** can be adjusted in `scrape.py` via `MAX_CONCURRENT_REQUESTS` and `REQUESTS_PER_MINUTE`.
+- **System prompt** for the LLM can be customized in `scrape.py`.
+- **Error handling**: The script will stop after 18 consecutive LLM failures.
+
+---
 
 ## Troubleshooting
 
-- If you encounter rate limits with the Spider API, try lowering the concurrency by adjusting the semaphore value.
-- For OpenAI API errors, check your API key and ensure you have sufficient credits.
-- For memory issues with large documents, try reducing the `limit` in `CRAWLER_PARAMS`.
+- If you hit OpenAI rate limits, lower concurrency or increase delay.
+- For network errors, the script retries with exponential backoff.
+- For memory issues, reduce the number of concurrent requests.
+- Check the generated log file for detailed error messages.
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the **PolyForm Internal Use License 1.0.0**.
+
+- You may use, modify, and create new works based on this software **for internal business purposes only**.
+- **Distribution is not permitted.**
+- No warranty is provided; use at your own risk.
+- For full terms, see the [LICENCE](./LICENCE) file or [PolyForm Internal Use License 1.0.0](https://polyformproject.org/licenses/internal-use/1.0.0).
+
+--- 
